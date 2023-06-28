@@ -129,4 +129,9 @@ class PersonDatabaseProvider {
     final db = await database;
     db.delete("ways");
   }
+
+  deleteAllCosts() async {
+    final db = await database;
+    db.delete("costs");
+  }
 }

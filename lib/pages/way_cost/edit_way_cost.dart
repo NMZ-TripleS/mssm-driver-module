@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mssm_driver_app/database/helper.dart';
 import 'package:mssm_driver_app/database/models/models.dart';
+import 'package:mssm_driver_app/pages/way_cost/income_outcome.dart';
 
 class EditCost extends StatefulWidget {
   final bool edit;
@@ -19,6 +20,9 @@ class _EditWayState extends State<EditCost> {
   TextEditingController descriptionEditingController = TextEditingController();
   TextEditingController amountEditingController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool inOrOut = true;
+  String wayId = "0";
+  final Future<List<Way>> _ways = PersonDatabaseProvider.db.ways();
   DateTime selectedDate = DateTime.now();
   bool _decideWhichDayToEnable(DateTime day) {
     if ((day.isAfter(DateTime.now().subtract(const Duration(days: 10))) &&
@@ -50,10 +54,24 @@ class _EditWayState extends State<EditCost> {
   void initState() {
     super.initState();
     if (widget.edit == true) {
-      selectedDate = DateTime.parse(widget.cost.date);
+      selectedDate = DateFormat("y-M-d").parse(widget.cost.date);
       titleEditingController.text = widget.cost.title;
+      amountEditingController.text = widget.cost.amount;
+      wayId = widget.cost.wayId;
+      inOrOut = widget.cost.costType == CostType.income;
       descriptionEditingController.text = widget.cost.description;
+    } else {
+      _ways.then(
+          (value) => {if (value.isNotEmpty) wayId = value.first.id.toString()});
     }
+  }
+
+  void onChanged(String? dropDownValue) {
+    if (dropDownValue == null) return;
+    String id = dropDownValue.split("-")[0];
+    setState(() {
+      wayId = id;
+    });
   }
 
   @override
@@ -99,6 +117,41 @@ class _EditWayState extends State<EditCost> {
                           color: Colors.black, fontWeight: FontWeight.bold),
                     ),
                   ),
+                  FutureBuilder<List<Way>>(
+                    future: _ways,
+                    builder: (BuildContext context,
+                        AsyncSnapshot<List<Way>> snapshot) {
+                      if (snapshot.hasData) {
+                        List<Way> ways = snapshot.data!;
+                        if (ways.isEmpty) return const SizedBox();
+                        List<String> wayStrings = ways
+                            .map((way) => "${way.id}- ${way.from} => ${way.to}")
+                            .toList();
+                        return DropdownButtonExample(
+                          list: wayStrings,
+                          onChanged: onChanged,
+                        );
+                      } else {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                    },
+                  ),
+                  const SizedBox(
+                    height: 15.0,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      IOBaseWidget(
+                          title: "IN",
+                          selected: inOrOut,
+                          onClick: () => setState(() => inOrOut = !inOrOut)),
+                      IOBaseWidget(
+                          title: "OUT",
+                          selected: !inOrOut,
+                          onClick: () => setState(() => inOrOut = !inOrOut))
+                    ],
+                  ),
                   TextButton(
                     child: const Text(
                       "Save",
@@ -114,8 +167,9 @@ class _EditWayState extends State<EditCost> {
                             description: descriptionEditingController.text,
                             date: DateFormat('y-M-d').format(selectedDate),
                             id: widget.cost.id,
-                            costType: CostType.income,
-                            wayId: "1",
+                            costType:
+                                inOrOut ? CostType.income : CostType.outcome,
+                            wayId: wayId,
                             amount: amountEditingController.text));
                         Navigator.pop(context);
                       } else {
@@ -124,9 +178,9 @@ class _EditWayState extends State<EditCost> {
                             title: titleEditingController.text,
                             description: descriptionEditingController.text,
                             date: DateFormat('y-M-d').format(selectedDate),
-                            id: widget.cost.id,
-                            costType: CostType.income,
-                            wayId: "1",
+                            costType:
+                                inOrOut ? CostType.income : CostType.outcome,
+                            wayId: wayId,
                             amount: amountEditingController.text));
                         if (!mounted) return;
                         Navigator.pop(context);
@@ -163,5 +217,42 @@ class _EditWayState extends State<EditCost> {
                 OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
       ),
     );
+  }
+}
+
+class DropdownButtonExample extends StatefulWidget {
+  const DropdownButtonExample(
+      {super.key, required this.list, required this.onChanged});
+  final List<String> list;
+  final void Function(String?)? onChanged;
+  @override
+  State<DropdownButtonExample> createState() => _DropdownButtonExampleState();
+}
+
+class _DropdownButtonExampleState extends State<DropdownButtonExample> {
+  @override
+  Widget build(BuildContext context) {
+    String dropdownValue = widget.list.first;
+    return DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.black),
+          borderRadius: BorderRadius.circular(5),
+        ),
+        child: Padding(
+            padding: const EdgeInsets.only(left: 30, right: 30),
+            child: DropdownButton(
+              value: dropdownValue,
+              items: widget.list.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: widget.onChanged,
+              isExpanded: true, //make true to take width of parent widget
+              underline: Container(), //empty line
+              style: const TextStyle(
+                  fontSize: 18, color: Colors.black), //Icon color
+            )));
   }
 }

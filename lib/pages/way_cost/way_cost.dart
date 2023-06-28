@@ -30,21 +30,21 @@ class _WayListState extends State<WayCost> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Costs"),
-        // actions: <Widget>[
-        //   TextButton(
-        //     onPressed: () {
-        //       PersonDatabaseProvider.db.deleteAllWays();
-        //       setState(() => {
-        //             _cost = PersonDatabaseProvider.db.costs(),
-        //             setState(() => {})
-        //           });
-        //     },
-        //     child: const Text(
-        //       "Delete Ways",
-        //       style: TextStyle(color: Colors.yellow),
-        //     ),
-        //   )
-        // ],
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              PersonDatabaseProvider.db.deleteAllCosts();
+              setState(() => {
+                    _cost = PersonDatabaseProvider.db.costs(),
+                    setState(() => {})
+                  });
+            },
+            child: const Text(
+              "Delete Costs",
+              style: TextStyle(color: Colors.yellow),
+            ),
+          )
+        ],
       ),
       body: FutureBuilder<List<Cost>>(
         future: _cost,
