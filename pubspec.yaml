@@ -38,11 +38,15 @@ dependencies:
   sqflite: ^2.2.8+4
   path: ^1.8.3
   intl: ^0.18.1
+  downloads_path_provider_28: ^0.1.2
+  permission_handler: ^10.3.0
+  excel: ^2.1.0
+  path_provider: ^2.0.15
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
+  #https://www.fluttercampus.com/guide/185/how-to-save-files-from-url-to-download-folder-in-flutter/
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
